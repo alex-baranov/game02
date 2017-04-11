@@ -9,8 +9,12 @@
 
 import SpriteKit
 import GameplayKit
+enum PhysicsCategory: UInt32 {
+    case enemy = 1
+    case shot = 2
+}
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let playerNode = SKSpriteNode(imageNamed: "myship")
     
@@ -18,6 +22,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         self.scaleMode = .aspectFill
         self.size = view.bounds.size
+        self.physicsWorld.contactDelegate = self
         setupPlayer()
         Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(GameScene.spawnEnemy), userInfo: nil, repeats: true)
     }
@@ -29,6 +34,7 @@ class GameScene: SKScene {
     
     func moveShip( touch: UITouch){
         playerNode.position.x = touch.location(in: self).x
+        playerNode.position.y = touch.location(in: self).y
         
     }
     
@@ -47,9 +53,17 @@ class GameScene: SKScene {
     
     func shot(){
         func makeShotBullet(isLeftCannon: Bool, player: SKSpriteNode) -> SKSpriteNode{
+            //create
             let shotNode = SKSpriteNode(imageNamed: "shot")
             shotNode.position.y = playerNode.position.y
             shotNode.zPosition = -1
+            //physics
+            shotNode.physicsBody = SKPhysicsBody(rectangleOf: shotNode.size)
+            shotNode.physicsBody?.affectedByGravity = false
+            shotNode.physicsBody?.categoryBitMask = PhysicsCategory.shot.rawValue
+            shotNode.physicsBody?.contactTestBitMask = PhysicsCategory.enemy.rawValue
+            shotNode.physicsBody?.isDynamic = false
+            // move
             let multiplierX: CGFloat = 0.42
             if isLeftCannon {
                 shotNode.position.x = playerNode.position.x - playerNode.size.width * multiplierX
@@ -71,11 +85,19 @@ class GameScene: SKScene {
     }
     
     func spawnEnemy(){
+        //create
         let enemy = SKSpriteNode(imageNamed: "enemyship")
         let x = self.size.width - enemy.size.width
-        let y = self.size.width + enemy.size.height
+        let y = self.size.height + enemy.size.height
         enemy.position = CGPoint(x: CGFloat(arc4random_uniform(UInt32(x))), y: y)
         self.addChild(enemy)
+        //physics
+        enemy.physicsBody = SKPhysicsBody(rectangleOf: enemy.size)
+        enemy.physicsBody?.affectedByGravity = false
+        enemy.physicsBody?.categoryBitMask = PhysicsCategory.enemy.rawValue
+        enemy.physicsBody?.contactTestBitMask = PhysicsCategory.shot.rawValue
+        enemy.physicsBody?.isDynamic = false
+        //move
         let moveAction = SKAction.moveTo(y: self.frame.minY, duration: 3)
         let removeAction = SKAction.removeFromParent()
         let sequence = SKAction.sequence([moveAction, removeAction])
@@ -100,6 +122,16 @@ class GameScene: SKScene {
        
     }
     
+    func didBegin(contact: SKPhysicsContact) {
+        let firstBody = contact.bodyA
+        let secondBody = contact.bodyB
+        let isContactA2B: Bool = ((firstBody.categoryBitMask & secondBody.contactTestBitMask) > 0)
+        let isContactB2A: Bool = ((secondBody.categoryBitMask & firstBody.contactTestBitMask) > 0)
+        if isContactA2B && isContactB2A {
+            firstBody.node?.removeFromParent()
+            secondBody.node?.removeFromParent()
+        }
+    }
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
