@@ -22,6 +22,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         self.scaleMode = .aspectFill
         self.size = view.bounds.size
+        self.anchorPoint = CGPoint(x: 0, y: 0)
         self.physicsWorld.contactDelegate = self
         setupPlayer()
         Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(GameScene.spawnEnemy), userInfo: nil, repeats: true)
@@ -90,6 +91,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let x = self.size.width - enemy.size.width
         let y = self.size.height + enemy.size.height
         enemy.position = CGPoint(x: CGFloat(arc4random_uniform(UInt32(x))), y: y)
+        enemy.anchorPoint = CGPoint(x: 0, y: 0)
         self.addChild(enemy)
         //physics
         enemy.physicsBody = SKPhysicsBody(rectangleOf: enemy.size)
