@@ -88,6 +88,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func spawnEnemy(){
         //create
         let enemy = SKSpriteNode(imageNamed: "enemyship")
+        enemy.xScale = 0.42
+        enemy.yScale = enemy.xScale
         let x = self.size.width - enemy.size.width
         let y = self.size.height + enemy.size.height
         enemy.position = CGPoint(x: CGFloat(arc4random_uniform(UInt32(x))), y: y)
