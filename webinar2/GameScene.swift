@@ -122,7 +122,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
        
     }
     
-    func didBegin(contact: SKPhysicsContact) {
+    func didBegin(_ contact: SKPhysicsContact) {
         let firstBody = contact.bodyA
         let secondBody = contact.bodyB
         let isContactA2B: Bool = ((firstBody.categoryBitMask & secondBody.contactTestBitMask) > 0)
